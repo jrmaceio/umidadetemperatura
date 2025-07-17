@@ -1,4 +1,4 @@
-Projeto de Monitoramento Climático com ESP32 em Alagoas
+Projeto de Monitoramento Climático com ESP32 Doit Devkit Esp32-wroom 32 Modulo Microcontrolador em Alagoas
 📖 Sobre o Projeto
 Este repositório contém o código-fonte e a documentação de um sistema de monitoramento de temperatura e umidade distribuído. O projeto utiliza três microcontroladores ESP32 DOIT DEVKIT V1 equipados com sensores DHT22 para coletar dados climáticos em tempo real de diferentes localidades no estado de Alagoas.
 
