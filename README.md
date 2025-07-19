@@ -22,11 +22,16 @@ União dos Palmares, AL
 
 🛠️ Hardware Utilizado
 Cada uma das três unidades de monitoramento é composta pelos seguintes componentes:
+
 Componente: ESP32 DOIT DEVKIT V1 (SKU 196)
-Sensor de Temperatura e Umidade DHT22 
+
+Sensor de Temperatura e Umidade DHT22: Dht22 Am2302 Arduino Rasp Node SKU: SS21 
+
 Resistor de 10kΩ: Resistor de pull-up para garantir a estabilidade na comunicação com o DHT22.
+
 Protoboard e Jumpers
-Fonte de Alimentação 3.3V
+
+Fonte de Alimentação 3.3V / Fonte de alimentação 5V/3.3V
 
 🔌 Diagrama de Conexão
 A conexão entre o ESP32 e o sensor DHT22 é realizada da seguinte forma:
