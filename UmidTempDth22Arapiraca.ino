@@ -17,68 +17,50 @@ const int LED_PIN = 26;
 const int BOTAO_PIN = 27;
 
 // Definições para o sensor DHT
-const int DHT_PIN = 4;      // Pino onde o sensor está conectado (D4)
-// ***** ALTERAÇÃO REALIZADA AQUI *****
-#define DHT_TYPE DHT22      // Define o tipo do sensor como DHT22. (Anteriormente DHT11)
+const int DHT_PIN = 4;
+#define DHT_TYPE DHT22
 
-//const unsigned long INTERVALO_LOOP = 1800000; // Intervalo entre as leituras (30 minutos)
-const unsigned long INTERVALO_LOOP = 5 * 60 * 1000; // 5 minutos * 60 segundos * 1000 milissegundos
+const unsigned long INTERVALO_LOOP = 5 * 60 * 1000; // 5 minutos
 
-// Cria o objeto 'dht' para nos comunicarmos com o sensor
 DHT dht(DHT_PIN, DHT_TYPE);
 
 // ====================================================================
-// VERSÃO FINAL E CORRETA DA FUNÇÃO
+// FUNÇÕES DE COMUNICAÇÃO COM A PLANILHA (sem alterações)
 // ====================================================================
 
 String fazerRequisicao(const String& jsonPayload) {
   if (WiFi.status() != WL_CONNECTED) {
     return "ERRO: Sem conexão WiFi";
   }
-
   HTTPClient http;
   String response = "";
-
-  // Usamos o redirecionamento automático da biblioteca, que agora funcionará
   http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
   http.begin(googleScriptURL);
   http.addHeader("Content-Type", "application/json");
-
   int httpResponseCode = http.POST(jsonPayload.c_str());
-
   if (httpResponseCode > 0) {
-    // A biblioteca já seguiu o redirecionamento, então a resposta é a final
     response = http.getString();
     Serial.printf("[HTTP] Código Final: %d\n", httpResponseCode);
-    Serial.println("Resposta do Servidor: " + response);
-
   } else {
     response = "ERRO: Falha na requisição. " + String(http.errorToString(httpResponseCode).c_str());
   }
-  
   http.end();
   return response;
 }
-
 
 bool escreverEmLista(const String& identificacao, int numDados, float dados[]) {
   StaticJsonDocument<256> jsonDoc;
   jsonDoc["action"] = "escreverEmLista";
   jsonDoc["identificacao"] = identificacao;
   JsonArray jsonDados = jsonDoc.createNestedArray("dados");
-
-  // Converte os números para texto para evitar erros de formatação
   char buffer[10];
   for (int i = 0; i < numDados; i++) {
     dtostrf(dados[i], 4, 2, buffer);
     jsonDados.add(String(buffer));
   }
-
   String jsonString;
   serializeJson(jsonDoc, jsonString);
-  
   String response = fazerRequisicao(jsonString);
-  Serial.println("Resposta do 'escreverEmLista': " + response);
   return !response.startsWith("ERRO");
 }
 
@@ -101,76 +83,47 @@ bool escreverEmCelula(const String& identificacao, const String& celula, const S
     String jsonString;
     serializeJson(jsonDoc, jsonString);
     String response = fazerRequisicao(jsonString);
-    Serial.println("Resposta do 'escreverEmCelula': " + response);
     return !response.startsWith("ERRO");
 }
 
 void montarCabecalho(const String& boardID, const String& colunaInicial, const std::vector<String>& cabecalhos) {
     String celulaVerificacao = lerCelula(boardID, colunaInicial + "1");
     if (celulaVerificacao != cabecalhos[0]) {
-        Serial.println("Cabeçalho não encontrado ou diferente. Configurando a planilha...");
+        Serial.println("Cabeçalho não encontrado. Configurando a planilha...");
         char coluna = colunaInicial[0];
         for (size_t i = 0; i < cabecalhos.size(); i++) {
             String celulaAlvo = String(coluna) + "1";
-            int tentativas = 0;
-            while (!escreverEmCelula(boardID, celulaAlvo, cabecalhos[i]) && tentativas < 3) {
-                Serial.println("Falha ao escrever cabeçalho. Tentando novamente...");
-                delay(1000);
-                tentativas++;
-            }
+            escreverEmCelula(boardID, celulaAlvo, cabecalhos[i]);
             coluna++;
         }
-        Serial.println("Configuração do cabeçalho finalizada.");
     } else {
         Serial.println("Cabeçalho da planilha já está correto.");
     }
 }
 
-
 // --- SETUP ---
 void setup() {
   Serial.begin(115200);
-
-  //debug
-  //Serial.println(googleScriptURL); 
-
   delay(1000); 
-  Serial.println("\n\n--- INICIANDO SETUP ---");
+  Serial.println("\n--- INICIANDO SETUP ---");
   
   pinMode(RELE_PIN, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
   pinMode(BOTAO_PIN, INPUT_PULLUP); 
-
   digitalWrite(RELE_PIN, LOW); 
-  digitalWrite(LED_PIN, LOW);  
-
-  // Inicia o sensor DHT
+  digitalWrite(LED_PIN, LOW);   
   dht.begin();
-  Serial.println("SETUP: Sensor DHT22 iniciado.");
 
-  Serial.println("SETUP: Conectando ao WiFi...");
+  Serial.println("Conectando ao WiFi...");
   WiFi.begin(ssid, password);
-
-  int tentativasWifi = 0;
-  while (WiFi.status() != WL_CONNECTED && tentativasWifi < 20) {
+  while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
-    tentativasWifi++;
   }
 
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("\nSETUP: WiFi Conectado!");
-    Serial.println("SETUP: Antes de montarCabecalho...");
-    
-    montarCabecalho("Arapiraca", "A", {"Data completa", "Data", "Hora", "Umidade", "Temperatura", "Botao", "Rele_Planilha", "Led_Planilha"});
-    
-    Serial.println("SETUP: Depois de montarCabecalho.");
-    Serial.println("--- SETUP CONCLUído, ENTRANDO NO LOOP ---");
-  } else {
-    Serial.println("\nFalha ao conectar no WiFi. Reiniciando...");
-    delay(10000);
-    ESP.restart();
-  }
+  Serial.println("\nWiFi Conectado!");
+  montarCabecalho("Arapiraca", "A", {"Data completa", "Data", "Hora", "Umidade", "Temperatura", "Botao", "Rele_Planilha", "Led_Planilha", "Reset"});
+  Serial.println("--- SETUP CONCLUÍDO ---");
 }
 
 // --- LOOP ---
@@ -184,7 +137,7 @@ void loop() {
   if (isnan(umidade) || isnan(temperatura)) {
     Serial.println("LOOP: Falha ao ler dados do sensor DHT22!");
   } else {
-    Serial.print("LOOP: Leitura do Sensor -> ");
+    Serial.print("LOOP: Leitura -> ");
     Serial.print(umidade);
     Serial.print("% Umidade, ");
     Serial.print(temperatura);
@@ -192,7 +145,6 @@ void loop() {
     escreverEmLista("Arapiraca", 3, new float[3]{umidade, temperatura, (float)statusBotao});
   }
   
-  // Pausa para o sensor e para espaçar as requisições
   delay(2000); 
 
   String valorRelePlanilha = lerCelula("Arapiraca", "G2");
@@ -202,7 +154,6 @@ void loop() {
     digitalWrite(RELE_PIN, LOW);
   }
 
-  // Pequena pausa entre as chamadas de leitura
   delay(50); 
 
   String valorLedPlanilha = lerCelula("Arapiraca", "H2");
@@ -212,7 +163,30 @@ void loop() {
     digitalWrite(LED_PIN, LOW);
   }
 
+  // ==================================================================
+  // BLOCO DE CÓDIGO PARA VERIFICAR E EXECUTAR O RESET
+  // ==================================================================
+  delay(50); 
+  Serial.println("LOOP: Verificando comando de reset...");
+  String valorReset = lerCelula("Arapiraca", "I2");
+  valorReset.trim();
+
+  // Verifica se o comando de reset foi recebido
+  if (valorReset == "1") {
+    Serial.println("COMANDO DE RESET (1) RECEBIDO!");
+    
+    // Zera o valor na planilha para evitar loop de boot
+    Serial.println("Escrevendo '0' na célula de reset para evitar novo boot...");
+    escreverEmCelula("Arapiraca", "I2", "0"); 
+    
+    Serial.println("Reiniciando o ESP32 em 2 segundos...");
+    delay(2000); // Atraso para garantir que a escrita na planilha seja concluída
+    
+    ESP.restart(); // Comando para reiniciar o ESP32
+  }
+  // ==================================================================
+
   Serial.println("LOOP: Fim da execução, aguardando proximo ciclo.");
   Serial.println("--------------------------------");
-  delay(INTERVALO_LOOP); // O intervalo longo principal
+  delay(INTERVALO_LOOP); 
 }
