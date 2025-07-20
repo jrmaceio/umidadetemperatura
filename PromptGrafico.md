@@ -1,61 +1,78 @@
-Promp para análise de dados:
+Forma de leitura:
 
-Prompt para Análise Climática Comparativa (Temperatura e Umidade) nas cidades de Belo Monte, Arapiraca e União dos Palmares
+Análise Climática Comparativa (Temperatura e Umidade)
+O resultado é um painel com dois gráficos alinhados. O de cima permite que você compare a temperatura entre as três cidades, e o de baixo permite a comparação da umidade. As cores das cidades são as mesmas nos dois gráficos para manter a consistência. Este modelo torna a comparação entre as cidades muito mais direta e clara.
 
-Objetivo: Desenvolver uma visualização de dados consolidada que compare diretamente as tendências de temperatura e umidade entre múltiplas cidades. O layout deve priorizar a clareza e a facilidade de comparação, apresentando as métricas em gráficos paralelos e alinhados.
+O Dashboard:
+Enquanto os gráficos anteriores mostravam a variação ao longo do tempo, este novo Dashboard de Distribuição resume as condições climáticas de cada cidade, sendo ideal para comparar o perfil geral de cada uma.
+Dashboard de Distribuição Climática
+Este painel utiliza gráficos de caixa (box plots) para mostrar a faixa de valores de temperatura e umidade em cada cidade.
+A caixa representa 50% de todos os dados medidos (do 1º ao 3º quartil).
+A linha dentro da caixa é a mediana (o valor do meio).
+As "hastes" (whiskers) mostram a maior parte do restante dos dados.
+Os pontos fora das hastes podem ser considerados valores atípicos (outliers).
+Com este dashboard, você pode responder rapidamente a perguntas como:
+Qual cidade teve a maior variação de temperatura?
+Qual cidade é, em geral, mais úmida?
+A temperatura em Belo Monte é mais estável que em Arapiraca?
 
-Título do Dashboard: Análise Climática Comparativa: Belo Monte, Arapiraca e União dos Palmares
 
-Layout Geral:
-O dashboard será composto por dois gráficos de linha principais, empilhados verticalmente e com o eixo de tempo (Eixo X) sincronizado.
+Prompt para usar em uma IA:
 
-Gráfico Superior: Comparação de Temperatura.
+Prompt para Dashboard Climático Abrangente e Comparativo
+Objetivo: Desenvolver um dashboard de Business Intelligence (BI) completo e interativo para a análise climática comparativa entre múltiplas cidades. O painel deve apresentar duas visualizações principais: uma para análise de tendências ao longo do tempo e outra para a análise da distribuição estatística dos dados.
 
-Gráfico Inferior: Comparação de Umidade.
+Título do Dashboard: Análise Climática Detalhada: Belo Monte, Arapiraca e União dos Palmares
 
-1. Gráfico de Comparação de Temperatura
-Título: Variação da Temperatura (°C)
+Componente 1: Análise de Tendências Temporais
+Esta seção focará na comparação das métricas ao longo do tempo.
 
-Tipo de Gráfico: Gráfico de linhas.
+Layout: Dois gráficos de linha empilhados verticalmente, com eixo de tempo (Eixo X) sincronizado.
 
-Eixo Y: Escala de Temperatura em graus Celsius (°C).
+Gráfico 1 (Superior) - Comparativo de Temperatura:
 
-Séries de Dados:
+Tipo: Gráfico de linhas.
 
-Uma linha separada para cada cidade, plotando a variação da temperatura ao longo do tempo.
+Conteúdo: Uma linha para cada cidade, plotando a Temperatura (°C). Cada cidade deve ser representada por uma cor única e consistente em todo o dashboard.
 
-Cada cidade deve ter uma cor única e claramente distinta (ex: Arapiraca em laranja, Belo Monte em azul, União dos Palmares em verde).
+Título: Variação da Temperatura (°C).
 
-Legenda: Uma única legenda identificando a cor de cada cidade.
+Legenda: Identificando a cor de cada cidade.
 
-2. Gráfico de Comparação de Umidade
-Título: Variação da Umidade Relativa (%)
+Gráfico 2 (Inferior) - Comparativo de Umidade:
 
-Tipo de Gráfico: Gráfico de linhas.
+Tipo: Gráfico de linhas.
 
-Eixo Y: Escala de Umidade Relativa em porcentagem (%).
+Conteúdo: Uma linha para cada cidade, plotando a Umidade Relativa (%). As cores devem ser as mesmas do gráfico de temperatura.
 
-Séries de Dados:
+Título: Variação da Umidade Relativa (%).
 
-Uma linha separada para cada cidade, plotando a variação da umidade ao longo do tempo.
+Legenda: Idêntica à do gráfico superior.
 
-As cores para cada cidade devem ser as mesmas utilizadas no gráfico de temperatura para manter a consistência.
+Componente 2: Análise de Distribuição Estatística
+Esta seção focará no resumo do perfil climático de cada cidade.
 
-Legenda: Uma legenda idêntica à do gráfico de temperatura.
+Layout: Dois gráficos de caixa (box plots) empilhados verticalmente.
 
-Estilo e Interatividade (Padrão Profissional):
-Eixo X Sincronizado: O eixo de tempo (Data/Hora) deve ser compartilhado e perfeitamente alinhado entre os dois gráficos. Ao aplicar zoom ou navegar em um gráfico, o outro deve responder da mesma forma.
+Gráfico 3 (Superior) - Distribuição de Temperatura:
 
-Tooltips (Caixas de Informação): Ao passar o mouse sobre qualquer linha em qualquer um dos gráficos, uma caixa de informações deve surgir, exibindo todas as informações para aquele ponto no tempo:
+Tipo: Gráfico de Caixa (Box Plot).
 
-Data e Hora
+Conteúdo: Um "box" para cada cidade, mostrando a distribuição estatística (mediana, quartis, outliers) dos dados de Temperatura (°C).
 
-Nome da Cidade
+Título: Distribuição das Temperaturas por Cidade.
 
-Temperatura da Cidade
+Gráfico 4 (Inferior) - Distribuição de Umidade:
 
-Umidade da Cidade
+Tipo: Gráfico de Caixa (Box Plot).
 
-Design Limpo: Fundo branco, fontes legíveis (ex: Arial, Lato) e linhas de grade sutis para guiar a leitura sem poluir a visualização.
+Conteúdo: Um "box" para cada cidade, mostrando a distribuição dos dados de Umidade Relativa (%).
 
-Marcadores: Marcadores de dados sutis (pequenos círculos) em cada ponto de coleta para indicar os dados reais medidos.
+Título: Distribuição da Umidade por Cidade.
+
+Requisitos de Interatividade e Estilo:
+Filtro de Cidades Global: Um único filtro (checkboxes ou botões) no topo do dashboard que permita ao usuário selecionar/desselecionar cidades, atualizando TODOS os quatro gráficos simultaneamente.
+
+Tooltips Detalhados: Ao passar o mouse sobre os gráficos de linha (Componente 1), exibir data, hora, cidade, temperatura e umidade. Ao passar sobre os box plots (Componente 2), exibir os valores estatísticos (mediana, máximo, mínimo, quartis).
+
+Design Profissional: Paleta de cores coesa, fundo limpo, fontes legíveis e títulos claros em todos os componentes para garantir uma leitura fácil e intuitiva.
