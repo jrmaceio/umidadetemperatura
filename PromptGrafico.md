@@ -4,7 +4,7 @@ Prompt para Análise Climática Comparativa (Temperatura e Umidade) nas cidades 
 
 Objetivo: Desenvolver uma visualização de dados consolidada que compare diretamente as tendências de temperatura e umidade entre múltiplas cidades. O layout deve priorizar a clareza e a facilidade de comparação, apresentando as métricas em gráficos paralelos e alinhados.
 
-Título do Dashboard: Análise Climática Comparativa: [Nome da Cidade 1], [Nome da Cidade 2], [Nome da Cidade 3]
+Título do Dashboard: Análise Climática Comparativa: Belo Monte, Arapiraca e União dos Palmares
 
 Layout Geral:
 O dashboard será composto por dois gráficos de linha principais, empilhados verticalmente e com o eixo de tempo (Eixo X) sincronizado.
