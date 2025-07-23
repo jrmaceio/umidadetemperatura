@@ -2,6 +2,8 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <vector>
+// Inclusão da biblioteca para o Watchdog Timer (WDT)
+#include <esp_task_wdt.h>
 
 // Inclusão da biblioteca para o sensor DHT
 #include "DHT.h"
@@ -20,10 +22,15 @@ const int BOTAO_PIN = 27;
 const int DHT_PIN = 4;
 #define DHT_TYPE DHT22
 
-const unsigned long INTERVALO_LOOP = 5 * 60 * 1000; // 5 minutos
+// Intervalo de 40 minutos em milissegundos
+const unsigned long INTERVALO_LOOP = 40 * 60 * 1000;
+
+// Tempo limite do Watchdog em segundos. Deve ser maior que o tempo total do loop.
+// O tempo do loop será o INTERVALO_LOOP + tempo das requisições e delays.
+// Um valor de 2460 segundos (41 minutos) é seguro.
+#define WDT_TIMEOUT 2460
 
 DHT dht(DHT_PIN, DHT_TYPE);
-
 // ====================================================================
 // FUNÇÕES DE COMUNICAÇÃO COM A PLANILHA (sem alterações)
 // ====================================================================
@@ -107,15 +114,22 @@ void setup() {
   delay(1000); 
   Serial.println("\n--- INICIANDO SETUP ---");
   
-  pinMode(RELE_PIN, OUTPUT);
-  pinMode(LED_PIN, OUTPUT);
-  pinMode(BOTAO_PIN, INPUT_PULLUP); 
-  digitalWrite(RELE_PIN, LOW); 
-  digitalWrite(LED_PIN, LOW);   
+  // --- CONFIGURAÇÃO DO WATCHDOG ---
+  Serial.println("Configurando o Watchdog Timer...");
+  // Habilita o watchdog com o tempo limite definido
+  esp_task_wdt_init(WDT_TIMEOUT, true); 
+  // Adiciona a tarefa atual (loop) ao watchdog para monitoramento
+  esp_task_wdt_add(NULL); 
+  
+  pinMode(RELE_PIN, OUTPUT); [cite: 20]
+  pinMode(LED_PIN, OUTPUT); [cite: 3]
+  pinMode(BOTAO_PIN, INPUT_PULLUP);
+  digitalWrite(RELE_PIN, LOW); [cite: 20]
+  digitalWrite(LED_PIN, LOW); [cite: 20]
   dht.begin();
 
   Serial.println("Conectando ao WiFi...");
-  WiFi.begin(ssid, password);
+  WiFi.begin(ssid, password); [cite: 2]
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
@@ -129,64 +143,68 @@ void setup() {
 // --- LOOP ---
 void loop() {
   Serial.println("\nLOOP: Início da execução.");
+  
+  // --- ALIMENTAÇÃO DO WATCHDOG ---
+  // Reseta o temporizador do watchdog no início de cada loop para evitar o reinício.
+  esp_task_wdt_reset();
+  
   bool statusBotao = (digitalRead(BOTAO_PIN) == LOW);
-
-  float umidade = dht.readHumidity();
-  float temperatura = dht.readTemperature();
+  float umidade = dht.readHumidity(); [cite: 23]
+  float temperatura = dht.readTemperature(); [cite: 23]
 
   if (isnan(umidade) || isnan(temperatura)) {
-    Serial.println("LOOP: Falha ao ler dados do sensor DHT22!");
+    Serial.println("LOOP: Falha ao ler dados do sensor DHT22!"); [cite: 24]
   } else {
     Serial.print("LOOP: Leitura -> ");
     Serial.print(umidade);
     Serial.print("% Umidade, ");
     Serial.print(temperatura);
     Serial.println("°C");
-    escreverEmLista("Arapiraca", 3, new float[3]{umidade, temperatura, (float)statusBotao});
+    escreverEmLista("Arapiraca", 3, new float[3]{umidade, temperatura, (float)statusBotao}); [cite: 25]
   }
   
   delay(2000); 
 
   String valorRelePlanilha = lerCelula("Arapiraca", "G2");
-  if (valorRelePlanilha == "1") {
-    digitalWrite(RELE_PIN, HIGH);
-  } else if (valorRelePlanilha == "0") {
-    digitalWrite(RELE_PIN, LOW);
+  if (valorRelePlanilha == "1") { [cite: 26]
+    digitalWrite(RELE_PIN, HIGH); [cite: 27]
+  } else if (valorRelePlanilha == "0") { [cite: 27]
+    digitalWrite(RELE_PIN, LOW); [cite: 27]
   }
 
   delay(50); 
 
   String valorLedPlanilha = lerCelula("Arapiraca", "H2");
-  if (valorLedPlanilha == "1") {
-    digitalWrite(LED_PIN, HIGH);
-  } else if (valorLedPlanilha == "0") {
-    digitalWrite(LED_PIN, LOW);
+  if (valorLedPlanilha == "1") { [cite: 28]
+    digitalWrite(LED_PIN, HIGH); [cite: 29]
+  } else if (valorLedPlanilha == "0") { [cite: 29]
+    digitalWrite(LED_PIN, LOW); [cite: 30]
   }
 
   // ==================================================================
   // BLOCO DE CÓDIGO PARA VERIFICAR E EXECUTAR O RESET
   // ==================================================================
-  delay(50); 
-  Serial.println("LOOP: Verificando comando de reset...");
+  delay(50);
+  Serial.println("LOOP: Verificando comando de reset..."); [cite: 31]
   String valorReset = lerCelula("Arapiraca", "I2");
   valorReset.trim();
-
   // Verifica se o comando de reset foi recebido
-  if (valorReset == "1") {
+  if (valorReset == "1") { [cite: 32]
     Serial.println("COMANDO DE RESET (1) RECEBIDO!");
-    
     // Zera o valor na planilha para evitar loop de boot
     Serial.println("Escrevendo '0' na célula de reset para evitar novo boot...");
-    escreverEmCelula("Arapiraca", "I2", "0"); 
+    escreverEmCelula("Arapiraca", "I2", "0"); [cite: 34]
     
     Serial.println("Reiniciando o ESP32 em 2 segundos...");
-    delay(2000); // Atraso para garantir que a escrita na planilha seja concluída
+    delay(2000);
+    // Atraso para garantir que a escrita na planilha seja concluída
     
-    ESP.restart(); // Comando para reiniciar o ESP32
+    ESP.restart(); [cite: 36]
+    // Comando para reiniciar o ESP32
   }
   // ==================================================================
 
   Serial.println("LOOP: Fim da execução, aguardando proximo ciclo.");
   Serial.println("--------------------------------");
-  delay(INTERVALO_LOOP); 
+  delay(INTERVALO_LOOP); [cite: 37]
 }
