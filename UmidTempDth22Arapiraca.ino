@@ -1,23 +1,16 @@
-Esse erro de compilação acontece porque a função `esp_task_wdt_init` foi atualizada em versões mais recentes do framework do ESP32. Em vez de aceitar o tempo e um booleano como parâmetros diretos, ela agora espera um ponteiro para uma estrutura de configuração.
-
-Para corrigir, você precisa criar uma estrutura de configuração (`esp_task_wdt_config_t`), definir os parâmetros dentro dela e então passá-la para a função de inicialização.
-
------
-
-### Código Corrigido
-
-Abaixo está o seu código anterior com a correção aplicada na função `setup()`. A lógica do watchdog e os outros recursos que você solicitou permanecem os mesmos.
-
-```cpp
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <vector>
-// Inclusão da biblioteca para o Watchdog Timer (WDT)
-#include <esp_task_wdt.h>
+// Não precisamos mais da biblioteca do watchdog
+// #include <esp_task_wdt.h>
 
 // Inclusão da biblioteca para o sensor DHT
 #include "DHT.h"
+
+// --- DEFINIÇÕES PARA DEEP SLEEP ---
+#define uS_TO_S_FACTOR 1000000ULL // Fator de conversão de microsegundos para segundos
+#define TIME_TO_SLEEP  2400      // Tempo para dormir em segundos (40 minutos = 2400s)
 
 // --- CONFIGURAÇÕES ---
 const char* ssid = "CLARO_2GC3B8C0";
@@ -32,12 +25,6 @@ const int BOTAO_PIN = 27;
 // Definições para o sensor DHT
 const int DHT_PIN = 4;
 #define DHT_TYPE DHT22
-
-// Intervalo de 40 minutos em milissegundos
-const unsigned long INTERVALO_LOOP = 40 * 60 * 1000;
-
-// Tempo limite do Watchdog em segundos.
-#define WDT_TIMEOUT_S 2460 // 41 minutos em segundos
 
 DHT dht(DHT_PIN, DHT_TYPE);
 // ====================================================================
@@ -123,19 +110,7 @@ void setup() {
   delay(1000); 
   Serial.println("\n--- INICIANDO SETUP ---");
   
-  // --- CORREÇÃO NA CONFIGURAÇÃO DO WATCHDOG ---
-  Serial.println("Configurando o Watchdog Timer...");
-  // 1. Cria a estrutura de configuração
-  esp_task_wdt_config_t wdt_config = {
-      .timeout_ms = WDT_TIMEOUT_S * 1000, // Define o timeout em milissegundos
-      .idle_core_mask = (1 << 0) | (1 << 1), // Monitora os cores 0 e 1 no estado ocioso
-      .trigger_panic = true, // Habilita a reinicialização por pânico
-  };
-  // 2. Inicializa o WDT com um ponteiro para a configuração
-  esp_task_wdt_init(&wdt_config);
-  
-  // Adiciona a tarefa atual (loop) ao watchdog para monitoramento
-  esp_task_wdt_add(NULL); 
+  // O Watchdog não é mais necessário com Deep Sleep
   
   pinMode(RELE_PIN, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
@@ -155,17 +130,12 @@ void setup() {
   montarCabecalho("Arapiraca", "A", {"Data completa", "Data", "Hora", "Umidade", "Temperatura", "Botao", "Rele_Planilha", "Led_Planilha", "Reset"});
   Serial.println("--- SETUP CONCLUÍDO ---");
   
-  // Acende o LED para indicar que o dispositivo está ligado e operacional.
   digitalWrite(LED_PIN, HIGH);
 }
 
 // --- LOOP ---
 void loop() {
   Serial.println("\nLOOP: Início da execução.");
-  
-  // --- ALIMENTAÇÃO DO WATCHDOG ---
-  // Reseta o temporizador do watchdog no início de cada loop para evitar o reinício.
-  esp_task_wdt_reset();
   
   bool statusBotao = (digitalRead(BOTAO_PIN) == LOW);
   float umidade = dht.readHumidity();
@@ -179,7 +149,9 @@ void loop() {
     Serial.print("% Umidade, ");
     Serial.print(temperatura);
     Serial.println("°C");
-    escreverEmLista("Arapiraca", 3, new float[3]{umidade, temperatura, (float)statusBotao});
+
+    float dadosParaEnviar[3] = {umidade, temperatura, (float)statusBotao};
+    escreverEmLista("Arapiraca", 3, dadosParaEnviar);
   }
   
   delay(2000); 
@@ -200,31 +172,28 @@ void loop() {
     digitalWrite(LED_PIN, LOW);
   }
 
-  // ==================================================================
-  // BLOCO DE CÓDIGO PARA VERIFICAR E EXECUTAR O RESET
-  // ==================================================================
   delay(50);
   Serial.println("LOOP: Verificando comando de reset...");
   String valorReset = lerCelula("Arapiraca", "I2");
   valorReset.trim();
-  // Verifica se o comando de reset foi recebido
+
   if (valorReset == "1") {
     Serial.println("COMANDO DE RESET (1) RECEBIDO!");
-    // Zera o valor na planilha para evitar loop de boot
-    Serial.println("Escrevendo '0' na célula de reset para evitar novo boot...");
-    escreverEmCelula("Arapiraca", "I2", "0");
-    
-    Serial.println("Reiniciando o ESP32 em 2 segundos...");
-    delay(2000);
-    // Atraso para garantir que a escrita na planilha seja concluída
-    
-    ESP.restart();
-    // Comando para reiniciar o ESP32
+    Serial.println("Tentando escrever '0' na célula de reset para evitar novo boot...");
+    if (escreverEmCelula("Arapiraca", "I2", "0")) {
+      Serial.println("Célula de reset limpa com sucesso! Reiniciando o ESP32 em 2 segundos...");
+      delay(2000);
+      ESP.restart();
+    } else {
+      Serial.println("ERRO: Falha ao limpar a célula de reset! O reset foi abortado para evitar boot loop.");
+    }
   }
-  // ==================================================================
 
-  Serial.println("LOOP: Fim da execução, aguardando proximo ciclo.");
+  Serial.println("LOOP: Fim da execução.");
   Serial.println("--------------------------------");
-  delay(INTERVALO_LOOP);
+  
+  // --- ENTRANDO EM DEEP SLEEP ---
+  Serial.printf("Entrando em modo Deep Sleep por %d segundos...\n", TIME_TO_SLEEP);
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+  esp_deep_sleep_start();
 }
-```
