@@ -138,6 +138,10 @@ void setup() {
   Serial.println("\nWiFi Conectado!");
   montarCabecalho("Arapiraca", "A", {"Data completa", "Data", "Hora", "Umidade", "Temperatura", "Botao", "Rele_Planilha", "Led_Planilha", "Reset"});
   Serial.println("--- SETUP CONCLUÍDO ---");
+
+  // --- NOVA LINHA ---
+  // Acende o LED para indicar que o dispositivo está ligado e operacional.
+  digitalWrite(LED_PIN, HIGH);
 }
 
 // --- LOOP ---
