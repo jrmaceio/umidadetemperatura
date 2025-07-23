@@ -6,6 +6,10 @@ Memória Flash: 4 MB
 Alimentação 4,5V a 9V
 Marca Blutu
 
+Led indicativo de funcionamento (LED) no pino 26 do seu microcontrolador (ESP32).
+biblioteca para o Watchdog Timer (WDT): esp_task_wdt.h
+
+Implantado um 
 📖 Sobre o Projeto
 Este repositório contém o código-fonte e a documentação de um sistema de monitoramento de temperatura e umidade distribuído. O projeto utiliza três microcontroladores ESP32 DOIT DEVKIT V1 equipados com sensores DHT22 para coletar dados climáticos em tempo real de diferentes localidades no estado de Alagoas.
 
