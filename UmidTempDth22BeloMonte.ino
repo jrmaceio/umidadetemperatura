@@ -13,8 +13,8 @@
 #define TIME_TO_SLEEP  2400      // Tempo para dormir em segundos (40 minutos = 2400s)
 
 // --- CONFIGURAÇÕES ---
-const char* ssid = "CLARO_2GC3B8C0";
-const char* password = "12C3B8C0";
+const char* ssid = "Sitio";
+const char* password = "Andrade2020";
 const char* googleScriptURL = "https://script.google.com/macros/s/AKfycbyh71u__MFmmi2uaEhTl_fhvzuthZxjD90fjT4gchU2YOwsSfmt-akRIiKi3WakQelH/exec";
 
 // --- PINOS ---
